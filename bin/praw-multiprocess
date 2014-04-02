@@ -1,0 +1,9 @@
+#!/home/irchphf/commonbot/bin/python
+# EASY-INSTALL-ENTRY-SCRIPT: 'praw==2.1.14','console_scripts','praw-multiprocess'
+__requires__ = 'praw==2.1.14'
+import sys
+from pkg_resources import load_entry_point
+
+sys.exit(
+   load_entry_point('praw==2.1.14', 'console_scripts', 'praw-multiprocess')()
+)
