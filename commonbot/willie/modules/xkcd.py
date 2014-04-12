@@ -15,8 +15,7 @@ from willie import web
 from willie.modules.search import google_search
 from willie.module import commands
 
-ignored_sites = [
-    # For google searching
+ignored_sites = [  # For google searching
     'almamater.xkcd.com',
     'blog.xkcd.com',
     'blag.xkcd.com',

@@ -58,9 +58,8 @@ def mw_snippet(server, query):
     # For some reason, the API gives the page *number* as the key, so we just
     # grab the first page number in the results.
     snippet = snippet[snippet.keys()[0]]
-    print snippet
 
-    return snippet
+    return snippet['extract']
 
 
 @commands('w', 'wiki', 'wik')

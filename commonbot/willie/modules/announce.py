@@ -18,5 +18,4 @@ def announce(bot, trigger):
         bot.reply('Sorry, I can\'t let you do that')
         return
     for channel in bot.channels:
-        bot.msg(channel, '[ANNOUNCEMENT] %s' % trigger.group(2))
-
+        bot.msg(channel, '[ANNOUNCMENT] %s' % trigger.group(2))

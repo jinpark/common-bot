@@ -11,7 +11,6 @@ http://willie.dftba.net/
 
 import re
 from willie.module import commands, priority, OP
-from willie.tools import Nick
 
 
 def setup(bot):
@@ -88,11 +87,11 @@ def kick(bot, trigger):
     argc = len(text)
     if argc < 2:
         return
-    opt = Nick(text[1])
+    opt = text[1]
     nick = opt
     channel = trigger.sender
     reasonidx = 2
-    if not opt.is_nick():
+    if opt.startswith('#'):
         if argc < 3:
             return
         nick = text[2]
@@ -138,10 +137,10 @@ def ban(bot, trigger):
     argc = len(text)
     if argc < 2:
         return
-    opt = Nick(text[1])
+    opt = text[1]
     banmask = opt
     channel = trigger.sender
-    if not opt.is_nick():
+    if opt.startswith('#'):
         if argc < 3:
             return
         channel = opt
@@ -164,10 +163,10 @@ def unban(bot, trigger):
     argc = len(text)
     if argc < 2:
         return
-    opt = Nick(text[1])
+    opt = text[1]
     banmask = opt
     channel = trigger.sender
-    if not opt.is_nick():
+    if opt.startswith('#'):
         if argc < 3:
             return
         channel = opt
@@ -190,10 +189,10 @@ def quiet(bot, trigger):
     argc = len(text)
     if argc < 2:
         return
-    opt = Nick(text[1])
+    opt = text[1]
     quietmask = opt
     channel = trigger.sender
-    if not opt.is_nick():
+    if opt.startswith('#'):
         if argc < 3:
             return
         quietmask = text[2]
@@ -216,10 +215,10 @@ def unquiet(bot, trigger):
     argc = len(text)
     if argc < 2:
         return
-    opt = Nick(text[1])
+    opt = text[1]
     quietmask = opt
     channel = trigger.sender
-    if not opt.is_nick():
+    if opt.startswith('#'):
         if argc < 3:
             return
         quietmask = text[2]
@@ -244,11 +243,11 @@ def kickban(bot, trigger):
     argc = len(text)
     if argc < 4:
         return
-    opt = Nick(text[1])
+    opt = text[1]
     nick = opt
     mask = text[2]
     reasonidx = 3
-    if not opt.is_nick():
+    if opt.startswith('#'):
         if argc < 5:
             return
         channel = opt
@@ -324,3 +323,4 @@ def show_mask(bot, trigger):
         bot.say(bot.db.preferences.get(trigger.sender.lower(), 'topic_mask'))
     else:
         bot.say("%s")
+

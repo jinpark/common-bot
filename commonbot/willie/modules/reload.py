@@ -10,7 +10,6 @@ import sys
 import os.path
 import time
 import imp
-from willie.tools import iteritems
 import willie.module
 import subprocess
 
@@ -39,7 +38,7 @@ def f_reload(bot, trigger):
     old_module = sys.modules[name]
 
     old_callables = {}
-    for obj_name, obj in iteritems(vars(old_module)):
+    for obj_name, obj in vars(old_module).iteritems():
         if bot.is_callable(obj) or bot.is_shutdown(obj):
             old_callables[obj_name] = obj
 
@@ -49,7 +48,7 @@ def f_reload(bot, trigger):
     # module does not override them.
     for obj_name in old_callables.keys():
         delattr(old_module, obj_name)
-
+    
     # Also delete the setup function
     if hasattr(old_module, "setup"):
         delattr(old_module, "setup")
@@ -77,7 +76,7 @@ def f_reload(bot, trigger):
 
 if sys.version_info >= (2, 7):
     @willie.module.nickname_commands('update')
-    def f_update(bot, trigger):
+    def update(bot, trigger):
         if not trigger.admin:
             return
 
@@ -90,7 +89,7 @@ if sys.version_info >= (2, 7):
         f_reload(bot, trigger)
 else:
     @willie.module.nickname_commands('update')
-    def f_update(bot, trigger):
+    def update(bot, trigger):
         bot.say('You need to run me on Python 2.7 to do that.')
 
 
@@ -128,27 +127,5 @@ def f_load(bot, trigger):
     bot.reply('%r (version: %s)' % (module, modified))
 
 
-# Catch PM based messages
-@willie.module.commands("reload")
-@willie.module.priority("low")
-@willie.module.thread(False)
-def pm_f_reload(bot, trigger):
-    """Wrapper for allowing delivery of .reload command via PM"""
-    if trigger.is_privmsg:
-        f_reload(bot, trigger)
-
-
-@willie.module.commands('update')
-def pm_f_update(bot, trigger):
-    """Wrapper for allowing delivery of .update command via PM"""
-    if trigger.is_privmsg:
-        f_update(bot, trigger)
-
-
-@willie.module.commands("load")
-@willie.module.priority("low")
-@willie.module.thread(False)
-def pm_f_load(bot, trigger):
-    """Wrapper for allowing delivery of .load command via PM"""
-    if trigger.is_privmsg:
-        f_load(bot, trigger)
+if __name__ == '__main__':
+    print __doc__.strip()

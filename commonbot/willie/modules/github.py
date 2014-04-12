@@ -7,18 +7,12 @@ http://willie.dftba.net/
 """
 
 from datetime import datetime
-import sys
-if sys.version_info.major < 3:
-    from urllib2 import HTTPError
-else:
-    from urllib.error import HTTPError
+from urllib2 import HTTPError
 import json
-from willie import web, tools
-from willie.module import commands, rule, NOLIMIT
+from willie import web
+from willie.module import commands
 import os
-import re
 
-issueURL = r'https?://(?:www\.)?github.com/([A-z0-9\-]+/[A-z0-9\-]+)/issues/([\d]+)'
 
 def checkConfig(bot):
     if not bot.config.has_option('github', 'oauth_token') or not bot.config.has_option('github', 'repo'):
@@ -40,11 +34,6 @@ def configure(config):
         config.interactive_add('github', 'repo', 'Github repository', 'embolalia/willie')
     return chunk
 
-def setup(bot):
-    regex = re.compile(issueURL)
-    if not bot.memory.contains('url_callbacks'):
-        bot.memory['url_callbacks'] = tools.WillieMemory()
-    bot.memory['url_callbacks'][regex] = issue_info
 
 @commands('makeissue', 'makebug')
 def issue(bot, trigger):
@@ -55,7 +44,7 @@ def issue(bot, trigger):
 
     # Is the Oauth token and repo available?
     gitAPI = checkConfig(bot)
-    if not gitAPI:
+    if gitAPI == False:
         return bot.say('Git module not configured, make sure github.oauth_token and github.repo are defined')
 
     # parse input
@@ -66,8 +55,7 @@ def issue(bot, trigger):
     try:
         raw = web.post('https://api.github.com/repos/' + gitAPI[1] + '/issues?access_token=' + gitAPI[0], json.dumps(data))
     except HTTPError:
-        bot.say('The GitHub API returned an error.')
-        return NOLIMIT
+        return bot.say('The GitHub API returned an error.')
 
     data = json.loads(raw)
     bot.say('Issue #%s posted. %s' % (data['number'], data['html_url']))
@@ -84,13 +72,13 @@ def add_traceback(bot, trigger):
     command will only work for errors from unhandled exceptions."""
     # Make sure the API is set up
     gitAPI = checkConfig(bot)
-    if not gitAPI:
+    if gitAPI == False:
         return bot.say('Git module not configured, make sure github.oauth_token and github.repo are defined')
 
     # Make sure the input is valid
     args = trigger.group(2).split(None, 1)
     if len(args) != 2:
-        bot.say('Please give both the issue number and the error message.')
+        bot.say(validate)
         return
     number, trace = args
 
@@ -125,9 +113,8 @@ def add_traceback(bot, trigger):
         raw = web.post('https://api.github.com/repos/' + gitAPI[1] + '/issues/'
                        + number + '/comments?access_token=' + gitAPI[0],
                        json.dumps({'body': '``\n' + post + '``'}))
-    except OSError:  # HTTPError:
-        bot.say('The GitHub API returned an error.')
-        return NOLIMIT
+    except OSError:#HTTPError:
+        return bot.say('The GitHub API returned an error.')
 
     data = json.loads(raw)
     bot.say('Added traceback to issue #%s. %s' % (number, data['html_url']))
@@ -142,11 +129,11 @@ def findIssue(bot, trigger):
 
     # Is the Oauth token and repo available?
     gitAPI = checkConfig(bot)
-    if not gitAPI:
+    if gitAPI == False:
         return bot.say('Git module not configured, make sure github.oauth_token and github.repo are defined')
     firstParam = trigger.group(2).split(' ')[0]
     if firstParam.isdigit():
-        URL = 'https://api.github.com/repos/%s/issues/%s' % (gitAPI[1], firstParam)
+        URL = 'https://api.github.com/repos/%s/issues/%s' % (gitAPI[1], trigger.group(2))
     elif firstParam == 'CLOSED':
         if '%20'.join(trigger.group(2).split(' ')[1:]) not in ('', '\x02', '\x03'):
             URL = 'https://api.github.com/legacy/issues/search/' + gitAPI[1] + '/closed/' + '%20'.join(trigger.group(2).split(' ')[1:])
@@ -158,8 +145,7 @@ def findIssue(bot, trigger):
     try:
         raw = web.get(URL)
     except HTTPError:
-        bot.say('The GitHub API returned an error.')
-        return NOLIMIT
+        return bot.say('The GitHub API returned an error.')
 
     try:
         if firstParam.isdigit():
@@ -174,34 +160,7 @@ def findIssue(bot, trigger):
         else:
             body = data['body'].split('\n')[0]
     except (KeyError):
-        bot.debug(
-            'GitHub KeyErr',
-            ('API returned an invalid result on query request ' +
-             trigger.group(2)),
-            'always')
-        bot.say('Invalid result, please try again later.')
-        return NOLIMIT
+        bot.debug('GitHub KeyErr', 'API returned an invalid result on query request '+trigger.group(2), 'always')
+        return bot.say('Invalid result, please try again later.')
     bot.reply('[#%s]\x02title:\x02 %s \x02|\x02 %s' % (data['number'], data['title'], body))
     bot.say(data['html_url'])
-
-@rule('.*%s.*' % issueURL)
-def issue_info(bot, trigger, match=None):
-    match = match or trigger
-    URL = 'https://api.github.com/repos/%s/issues/%s' % (match.group(1), match.group(2))
-
-    try:
-        raw = web.get(URL)
-    except HTTPError:
-        bot.say('The GitHub API returned an error.')
-        return NOLIMIT
-    data = json.loads(raw)
-    try:
-        if len(data['body'].split('\n')) > 1:
-            body = data['body'].split('\n')[0] + '...'
-        else:
-            body = data['body'].split('\n')[0]
-    except (KeyError):
-        bot.say('The API says this is an invalid issue. Please report this if you know it\'s a correct link!')
-        return NOLIMIT
-    bot.say('[#%s]\x02title:\x02 %s \x02|\x02 %s' % (data['number'], data['title'], body))
-

@@ -8,7 +8,7 @@ Copyright 2013, Ari Koivula <ari@koivu.la>
 
 Licensed under the Eiffel Forum License 2.
 
-http://willie.dftba.net
+http://willie.dfbta.net
 """
 
 import willie.module
@@ -29,7 +29,7 @@ def configure(config):
 def join(bot, trigger):
     """Join the specified channel. This is an admin-only command."""
     # Can only be done in privmsg by an admin
-    if not trigger.is_privmsg:
+    if trigger.sender.startswith('#'):
         return
 
     if trigger.admin:
@@ -48,7 +48,7 @@ def join(bot, trigger):
 def part(bot, trigger):
     """Part the specified channel. This is an admin-only command."""
     # Can only be done in privmsg by an admin
-    if not trigger.is_privmsg:
+    if trigger.sender.startswith('#'):
         return
     if not trigger.admin:
         return
@@ -65,7 +65,7 @@ def part(bot, trigger):
 def quit(bot, trigger):
     """Quit from the server. This is an owner-only command."""
     # Can only be done in privmsg by the owner
-    if not trigger.is_privmsg:
+    if trigger.sender.startswith('#'):
         return
     if not trigger.owner:
         return
@@ -85,11 +85,9 @@ def msg(bot, trigger):
     Send a message to a given channel or nick. Can only be done in privmsg by an
     admin.
     """
-    if not trigger.is_privmsg:
+    if trigger.sender.startswith('#'):
         return
     if not trigger.admin:
-        return
-    if trigger.group(2) is None:
         return
 
     channel, _sep, message = trigger.group(2).partition(' ')
@@ -107,11 +105,9 @@ def me(bot, trigger):
     Send an ACTION (/me) to a given channel or nick. Can only be done in privmsg
     by an admin.
     """
-    if not trigger.is_privmsg:
+    if trigger.sender.startswith('#'):
         return
     if not trigger.admin:
-        return
-    if trigger.group(2) is None:
         return
 
     channel, _sep, action = trigger.group(2).partition(' ')
@@ -156,7 +152,7 @@ def hold_ground(bot, trigger):
 @willie.module.priority('low')
 def mode(bot, trigger):
     """Set a user mode on Willie. Can only be done in privmsg by an admin."""
-    if not trigger.is_privmsg:
+    if trigger.sender.startswith('#'):
         return
     if not trigger.admin:
         return
@@ -176,7 +172,7 @@ def set_config(bot, trigger):
     If there is no section, section will default to "core".
     If value is None, the option will be deleted.
     """
-    if not trigger.is_privmsg:
+    if trigger.sender.startswith('#'):
         bot.reply("This command only works as a private message.")
         return
     if not trigger.admin:
@@ -216,8 +212,12 @@ def set_config(bot, trigger):
 @willie.module.example('.save')
 def save_config(bot, trigger):
     """Save state of willies config object to the configuration file."""
-    if not trigger.is_privmsg:
+    if trigger.sender.startswith('#'):
         return
     if not trigger.admin:
         return
     bot.config.save()
+
+
+if __name__ == '__main__':
+    print __doc__.strip()
