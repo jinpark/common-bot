@@ -51,8 +51,8 @@ def formatnumber(n):
     return ''.join(parts)
 
 
-@commands('g', 'google')
-@example('.g swhack')
+# @commands('g', 'google')
+# @example('.g swhack')
 def g(bot, trigger):
     """Queries Google for the specified input."""
     query = trigger.group(2)

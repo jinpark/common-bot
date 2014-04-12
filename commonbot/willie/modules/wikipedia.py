@@ -62,8 +62,8 @@ def mw_snippet(server, query):
     return snippet['extract']
 
 
-@commands('w', 'wiki', 'wik')
-@example('.w San Francisco')
+# @commands('w', 'wiki', 'wik')
+# @example('.w San Francisco')
 def wikipedia(bot, trigger):
     #Set the global default lang. 'en' if not definded
     if not bot.config.has_option('wikipedia', 'default_lang'):
