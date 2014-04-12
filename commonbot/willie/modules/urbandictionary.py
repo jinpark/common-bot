@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 """
 urbandictionary.py - bot Urban Dictionary Module
 Copyright 2013, Jin Park - jinpark.net
@@ -14,7 +15,7 @@ import string
 @module.commands('ud')
 def ud(bot, trigger):
     """Urban Dictionary Definition"""
-    htmlinput  = urllib.quote(trigger.group(2))
+    htmlinput  = urllib.quote(trigger.group(2).encode("utf-8"))
     url = 'http://api.urbandictionary.com/v0/define?term=' + htmlinput
     try:
         json_response = requests.get(url).json()
@@ -28,7 +29,7 @@ def ud(bot, trigger):
 @module.commands('ude')
 def ude(bot, trigger):
     """Urban Dictionary Example"""
-    htmlinput  = urllib.quote(trigger.group(2))
+    htmlinput  = urllib.quote(trigger.group(2).encode("utf-8"))
     url = 'http://api.urbandictionary.com/v0/define?term=' + htmlinput
     try:
         json_response = requests.get(url).json()
