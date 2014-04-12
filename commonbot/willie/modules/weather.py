@@ -63,7 +63,7 @@ def woeid_search(query):
     """
     # query = urllib.urlencode({'q': 'select * from geo.placefinder where text="%s"' % query})
     # body = web.get('http://query.yahooapis.com/v1/public/yql?' + query)
-    payload = {'q': 'select * from geo.placefinder where text="%s"' % query}
+    payload = {'q': 'select * from geo.placefinder where text="%s"' % query.encode("utf-8")}
     body = requests.get('http://query.yahooapis.com/v1/public/yql?', params=payload).content
     parsed = etree.fromstring(body)
     first_result = parsed.find('results/Result')
