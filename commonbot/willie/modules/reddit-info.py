@@ -24,7 +24,7 @@ def setup(bot):
     bot.memory['url_callbacks'][user_regex] = redditor_info
 
 
-@rule('.*%s.*' % post_url)
+# @rule('.*%s.*' % post_url)
 def rpost_info(bot, trigger, match=None):
     r = praw.Reddit(user_agent='phenny / willie IRC bot - see dft.ba/-williesource for more')
     match = match or trigger
