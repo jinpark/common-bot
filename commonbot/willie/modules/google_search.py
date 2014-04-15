@@ -16,4 +16,4 @@ def google_search(bot, trigger):
     	bot.say('No results found.')
     else:
     	first_result = results[0]
-    	bot.say(u"{} - {}".format(first_result['url'], first_result['titleNoFormatting']))
+    	bot.say(u"{} - {}".format(first_result['unescapedUrl'], first_result['titleNoFormatting']))
