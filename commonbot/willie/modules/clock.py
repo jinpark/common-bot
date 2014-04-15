@@ -19,7 +19,7 @@ def setup(bot):
         bot.db.preferences.add_columns(['time_format'])
 
 
-@commands('t', 'time')
+@commands('t', 'time', 'tz')
 @example('.t America/New_York')
 def f_time(bot, trigger):
     """Returns the current time."""

@@ -54,6 +54,9 @@ def setup(bot):
     if bot.db and not bot.db.preferences.has_columns('location'):
         bot.db.preferences.add_columns(['location'])
 
+    if bot.db and not bot.db.preferences.has_columns('tz'):
+        bot.db.preferences.add_columns(['tz'])
+
 
 def woeid_search(query):
     """
@@ -244,20 +247,10 @@ def weather_forecast(bot, trigger):
     if not woeid:
         return bot.reply("I don't know where that is.")
 
-    # query = web.urlencode({'w': woeid, 'u': 'c'})
-    # url = 'http://weather.yahooapis.com/forecastrss?' + query
-    # parsed = feedparser.parse(url)
-    # location = parsed['feed']['title']
-
-    # cover = get_cover(parsed)
-    # temp = get_temp(parsed)
-    # pressure = get_pressure(parsed)
-    # wind = get_wind(parsed)
-    # bot.say(u'%s: %s, %s, %s, %s' % (location, cover, temp, pressure, wind))
     wf_text = wfbase(latitude, longitude, location)
     bot.say(wf_text)
 
-@commands('setlocation', 'setwoeid')
+@commands('setlocation', 'setloc')
 @example('.setlocation Columbus, OH')
 def update_woeid(bot, trigger):
     """Set your default weather location."""
@@ -270,11 +263,13 @@ def update_woeid(bot, trigger):
         latitude = first_result.find('latitude').text
         longitude = first_result.find('longitude').text
         location = first_result.find('line2').text
+        timezone = get_timezone(latitude, longitude)
 
         bot.db.preferences.update(trigger.nick, {'woeid': woeid})
         bot.db.preferences.update(trigger.nick, {'latitude': latitude})
         bot.db.preferences.update(trigger.nick, {'longitude': longitude})
         bot.db.preferences.update(trigger.nick, {'location': location})
+        bot.db.preferences.update(trigger.nick, {'tz': timezone})
 
         neighborhood = first_result.find('neighborhood').text or ''
         if neighborhood:
@@ -283,26 +278,30 @@ def update_woeid(bot, trigger):
         state = first_result.find('state').text or ''
         country = first_result.find('country').text or ''
         uzip = first_result.find('uzip').text or ''
-        bot.reply('I now have you at WOEID %s (%s %s, %s, %s %s.)' %
-                  (woeid, neighborhood, city, state, country, uzip))
+        bot.reply('I now have you at WOEID %s (%s %s, %s, %s %s.) and at timezone %s' %
+                  (woeid, neighborhood, city, state, country, uzip, timezone))
     else:
         bot.reply("I can't remember that; I don't have a database.")
 
 def weabase(latitude, longitude, location, units='si'):
-    forecast_url = 'https://api.forecast.io/forecast/' + apikey.darksky + '/' + str(latitude) + ',' + str(longitude) + '?units=' + units
+    forecast_url = 'https://api.forecast.io/forecast/' + apikey.darksky_key + '/' + str(latitude) + ',' + str(longitude) + '?units=' + units
     json_forecast = requests.get(forecast_url).json()
     nowwea = json_forecast['currently']
     units = json_forecast['flags']['units']
     if units == 'us':
         deg = degf
+        opp_deg = defc
         windspeedunits = "mph"
+        opp_windspeedunits = "km/h"
     else:
         deg = degc
+        opp_deg = degf
         windspeedunits = "km/h"
-    return u"{}: {}{} {}. Wind {} {} {}. Feels like {}".format(location.decode('utf-8'), str(int(nowwea["temperature"])), deg, nowwea["summary"].decode('utf-8'), degreeToDirection(nowwea["windBearing"]), str(round(nowwea["windSpeed"],1)), windspeedunits, str(round(nowwea["apparentTemperature"],1)) )
+        opp_windspeedunits = "mph"
+    return u"{}: {}{} ({}{}) {}. Wind {} {} {} ({} {}). Feels like {} ({})".format(location.decode('utf-8'), str(int(nowwea["temperature"])), deg, str(c_to_f(int(nowwea["temperature"]))), opp_deg, nowwea["summary"].decode('utf-8'), degreeToDirection(nowwea["windBearing"]), str(round(nowwea["windSpeed"],1)), windspeedunits, str(round(kmh_to_mph(nowwea["windSpeed"]),1)), opp_windspeedunits, str(round(nowwea["apparentTemperature"],1)), str(round(c_to_f(nowwea["apparentTemperature"]),1)) )
 
 def wfbase(latitude, longitude, location, units='si'):
-    forecast_url = 'https://api.forecast.io/forecast/' + apikey.darksky + '/' + str(latitude) + ',' + str(longitude) + '?units=' + units
+    forecast_url = 'https://api.forecast.io/forecast/' + apikey.darksky_key + '/' + str(latitude) + ',' + str(longitude) + '?units=' + units
     weajson = requests.get(forecast_url).json()
     currentwea = weajson['daily']['data'][0]
     tomwea = weajson['daily']['data'][1]
@@ -314,10 +313,30 @@ def wfbase(latitude, longitude, location, units='si'):
     print currentwea
     print tomwea
     print weajson
-    return u'{location} - Today: {min_temp} - {max_temp} {deg} {summary} Tomorrow: {tom_min} - {tom_max} {deg} {tom_summary} This Week: {week_summary}'.format(location=location, min_temp=str(int(round(currentwea["temperatureMin"]))), max_temp=str(int(round(currentwea["temperatureMax"]))), deg=deg, summary=currentwea["summary"], 
+    return u'{location} - Today: {min_temp}-{max_temp}{deg} {summary} Tomorrow: {tom_min}-{tom_max}{deg} {tom_summary} This Week: {week_summary}'.format(location=location, min_temp=str(int(round(currentwea["temperatureMin"]))), max_temp=str(int(round(currentwea["temperatureMax"]))), deg=deg, summary=currentwea["summary"], 
                                                                                                                                                                                                         tom_min=str(int(round(tomwea["temperatureMin"]))), tom_max=str(int(round(tomwea["temperatureMax"]))), tom_summary=tomwea["summary"],
                                                                                                                                                                                                         week_summary=weajson['daily']['summary'])
-    print forecast_url
-    # return u'{stuff}'.format(stuff=weajson['daily']['summary'])
 
+def old_wea(woeid):
+    query = web.urlencode({'w': woeid, 'u': 'c'})
+    url = 'http://weather.yahooapis.com/forecastrss?' + query
+    parsed = feedparser.parse(url)
+    location = parsed['feed']['title']
+
+    cover = get_cover(parsed)
+    temp = get_temp(parsed)
+    pressure = get_pressure(parsed)
+    wind = get_wind(parsed)
+    bot.say(u'%s: %s, %s, %s, %s' % (location, cover, temp, pressure, wind))
+    
+def c_to_f(temp):
+    return temp * 1.8 + 32
+
+def kmh_to_mph(speed):
+    return speed * 0.621371
+    
+def get_timezone(lat, lon):
+    timezonedb_url = "http://ws.geonames.org/timezoneJSON?lat={}&lng={}&username={}".format(lat, lon, apikey.geonames_username)
+    tz_json = requests.get(timezonedb_url).json()
+    return tz_json['timezoneId']
 
