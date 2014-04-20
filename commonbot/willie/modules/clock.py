@@ -10,6 +10,9 @@ import pytz
 import datetime
 from willie.module import commands, example, OP
 
+import requests
+import apikey
+
 
 def setup(bot):
     #Having a db means pref's exists. Later, we can just use `if bot.db`.
@@ -36,10 +39,16 @@ def f_time(bot, trigger):
                     bot.say("I'm sorry, I don't know %s's timezone"
                             % trigger.group(2))
                     return
+                location = bot.db.preferences.get(trigger.group(2), 'location')
             else:
-                bot.say("I'm sorry, I don't know about the %s timezone or"
-                           " user." % tz)
-                return
+                osm_url = 'http://nominatim.openstreetmap.org/search?q=' + tz + '&format=json'
+                location_json = requests.get(osm_url).json()
+                latitude = location_json[0]['lat']
+                longitude = location_json[0]['lon']
+                location = location_json[0]['display_name']
+                geonames_url = 'http://api.geonames.org/timezoneJSON?lat=' + latitude + '&lng=' + longitude + '&username=' + apikey.geonames_username
+                timezone_json = requests.get(geonames_url).json()
+                tz = timezone_json['timezoneId']
     #We don't have a timzeone. Is there one set? If not, just use UTC
     elif bot.db:
         if trigger.nick in bot.db.preferences:
@@ -60,7 +69,12 @@ def f_time(bot, trigger):
         if not tformat and trigger.sender in bot.db.preferences:
             tformat = bot.db.preferences.get(trigger.sender, 'time_format')
 
-    bot.say(now.strftime(tformat or "%F - %T%Z"))
+    try:
+        location
+    except:
+        location = ''
+        
+    bot.say(location + ": " + now.strftime(tformat or "%F | %T %Z"))
 
 
 @commands('settz')

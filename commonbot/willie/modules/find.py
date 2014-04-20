@@ -56,6 +56,7 @@ def collectlines(bot, trigger):
 #slash is ignored, you can escape slashes with backslashes, and if you want to
 #search for an actual backslash followed by an actual slash, you're shit out of
 #luck because this is the fucking regex of death as it is.
+'''
 @rule(r"""(?:
             (\S+)           # Catch a nick in group 1
           [:,]\s+)?         # Followed by colon/comma and whitespace, if given
@@ -68,6 +69,7 @@ def collectlines(bot, trigger):
           (?:/(\S+))?       # Optional slash, followed by group 4 (flags)
           """)
 @priority('high')
+'''
 def findandreplace(bot, trigger):
     # Don't bother in PM
     if not trigger.sender.startswith('#'):

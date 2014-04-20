@@ -166,7 +166,7 @@ def get_wind(parsed):
     return description + ' ' + str(speed) + 'kt (' + degrees + ')'
 
 
-@commands('weather', 'wea')
+@commands('weather', 'wea', 'weac', 'weaf')
 @example('.weather London')
 def weather(bot, trigger):
     """.weather location - Show the weather at the given location."""
@@ -196,6 +196,10 @@ def weather(bot, trigger):
                 latitude = first_result.find('latitude').text
                 longitude = first_result.find('longitude').text
                 location = first_result.find('line2').text
+                if not location:
+                    location = first_result.find('line1').text
+                if not location:
+                    location = first_result.find('line4').text
 
     if not woeid:
         return bot.reply("I don't know where that is.")
@@ -263,6 +267,10 @@ def update_woeid(bot, trigger):
         latitude = first_result.find('latitude').text
         longitude = first_result.find('longitude').text
         location = first_result.find('line2').text
+        if not location:
+            location = first_result.find('line1').text
+        if not location:
+            location = first_result.find('line4').text
         timezone = get_timezone(latitude, longitude)
 
         bot.db.preferences.update(trigger.nick, {'woeid': woeid})

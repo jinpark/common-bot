@@ -107,7 +107,7 @@ def title_command(bot, trigger):
         bot.reply('[ %s ] - %s' % (title, domain))
 
 
-# @rule('(?u).*(https?://\S+).*')
+@rule('(?u).*(https?://\S+).*')
 def title_auto(bot, trigger):
     """
     Automatically show titles for URLs. For shortened URLs/redirects, find
@@ -121,11 +121,11 @@ def title_auto(bot, trigger):
     results = process_urls(bot, trigger, urls)
     bot.memory['last_seen_url'][trigger.sender] = urls[-1]
 
-    for title, domain in results[:4]:
-        message = '[ %s ] - %s' % (title, domain)
-        # Guard against responding to other instances of this bot.
-        if message != trigger:
-            bot.say(message)
+    # for title, domain in results[:4]:
+    #     message = '[ %s ] - %s' % (title, domain)
+    #     # Guard against responding to other instances of this bot.
+    #     if message != trigger:
+    #         bot.say(message)
 
 
 def process_urls(bot, trigger, urls):
@@ -209,7 +209,7 @@ def find_title(url):
         try:
             content = content.decode('utf-8')
         except:
-            return
+            return "Bob ate the title"
 
     # Some cleanup that I don't really grok, but was in the original, so
     # we'll keep it (with the compiled regexes made global) for now.
@@ -219,7 +219,7 @@ def find_title(url):
     start = content.find('<title>')
     end = content.find('</title>')
     if start == -1 or end == -1:
-        return
+        return "Bob ate the title"
     title = web.decode(content[start + 7:end])
     title = title.strip()[:200]
 
