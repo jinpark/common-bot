@@ -12,6 +12,9 @@ from willie import web
 from willie.module import commands, example
 from socket import timeout
 import string
+import urllib2
+from bs4 import BeautifulSoup as bs
+import requests
 import HTMLParser
 
 
@@ -43,9 +46,21 @@ def c(bot, trigger):
     """Google calculator."""
     if not trigger.group(2):
         return bot.reply("Nothing to calculate.")
-    result = calculate(trigger.group(2))
+    result = google_calc(trigger.group(2))
     bot.reply(result)
 
+def google_calc(calc_input):
+    q = urllib2.quote(calc_input)
+    q = q.replace('\xcf\x95', 'phi') # utf-8 U+03D5
+    q = q.replace('\xcf\x80', 'pi') # utf-8 U+03C0
+    uri = "http://www.google.com/search?q="
+    r = requests.get(uri + q)
+    soup = bs(r.text)
+    answer = soup.find('h2', {'class', "r"})
+    if answer:
+        return answer.text
+    else:
+        return 'Sorry, no result.'
 
 @commands('py')
 @example('.py len([1,2,3])', '3')
