@@ -166,7 +166,7 @@ def get_wind(parsed):
     return description + ' ' + str(speed) + 'kt (' + degrees + ')'
 
 
-@commands('weather', 'wea', 'weac', 'weaf')
+@commands('weather', 'wea')
 @example('.weather London')
 def weather(bot, trigger):
     """.weather location - Show the weather at the given location."""
@@ -247,6 +247,10 @@ def weather_forecast(bot, trigger):
                 latitude = first_result.find('latitude').text
                 longitude = first_result.find('latitude').text
                 location = first_result.find('line2').text
+                if not location:
+                    location = first_result.find('line1').text
+                if not location:
+                    location = first_result.find('line4').text
 
     if not woeid:
         return bot.reply("I don't know where that is.")
@@ -318,9 +322,6 @@ def wfbase(latitude, longitude, location, units='si'):
         deg = degf
     else:
         deg = degc
-    print currentwea
-    print tomwea
-    print weajson
     return u'{location} - Today: {min_temp}-{max_temp}{deg} {summary} Tomorrow: {tom_min}-{tom_max}{deg} {tom_summary} This Week: {week_summary}'.format(location=location, min_temp=str(int(round(currentwea["temperatureMin"]))), max_temp=str(int(round(currentwea["temperatureMax"]))), deg=deg, summary=currentwea["summary"], 
                                                                                                                                                                                                         tom_min=str(int(round(tomwea["temperatureMin"]))), tom_max=str(int(round(tomwea["temperatureMax"]))), tom_summary=tomwea["summary"],
                                                                                                                                                                                                         week_summary=weajson['daily']['summary'])
@@ -348,3 +349,7 @@ def get_timezone(lat, lon):
     tz_json = requests.get(timezonedb_url).json()
     return tz_json['timezoneId']
 
+@commands('weac', 'weaf')
+def weather_deprecated_message(bot, trigger):
+	bot.say("weac and weaf are deprecated. Please use .wea instead")
+	weather(bot, trigger)

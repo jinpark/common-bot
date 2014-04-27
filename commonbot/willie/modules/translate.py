@@ -77,9 +77,9 @@ def translate(text, input='auto', output='en'):
     return ''.join(x[0] for x in data[0]), language
 
 
-@rule(ur'$nickname[,:]\s+(?:([a-z]{2}) +)?(?:([a-z]{2}|en-raw) +)?["“](.+?)["”]\? *$')
-@example('$nickname: "mon chien"? or $nickname: fr "mon chien"?')
-@priority('low')
+# @rule(ur'$nickname[,:]\s+(?:([a-z]{2}) +)?(?:([a-z]{2}|en-raw) +)?["“](.+?)["”]\? *$')
+# @example('$nickname: "mon chien"? or $nickname: fr "mon chien"?')
+# @priority('low')
 def tr(bot, trigger):
     """Translates a phrase, with an optional language hint."""
     input, output, phrase = trigger.groups()
@@ -108,7 +108,7 @@ def tr(bot, trigger):
         bot.reply('Language guessing failed, so try suggesting one!')
 
 
-@commands('translate', 'tr')
+# @commands('translate', 'tr')
 def tr2(bot, trigger):
     """Translates a phrase, with an optional language hint."""
     command = trigger.group(2).encode('utf-8')
