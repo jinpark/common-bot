@@ -75,7 +75,7 @@ def format(word, definitions, number=2):
     return result.strip(' .,')
 
 
-@commands('wt', 'define', 'dict')
+@commands('wt', 'define', 'dict', 'def')
 @example('.wt bailiwick')
 def wiktionary(bot, trigger):
     """Look up a word on Wiktionary."""

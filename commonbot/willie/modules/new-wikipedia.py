@@ -32,6 +32,6 @@ def wiki_search(search_input):
 
     if summary_length + url_length > 430:
       new_summary_length = 430 - url_length
-      summary = summary[:new_summary_length] + u" ..."
+      summary = summary[:new_summary_length] + u"..."
 
     return u"{} - {}".format(summary, url)

@@ -21,7 +21,7 @@ def setup(bot):
     if bot.db and not bot.db.preferences.has_columns('lastfm'):
         bot.db.preferences.add_columns(['lastfm'])
 
-@commands('userinfo')
+@commands('userinfo', 'userdata')
 @example('.userinfo --lastfm bob')
 def userinfo(bot, trigger):
     """.userinfo --lastfm bob - Adds user specific data (use .setlocation for location specific thingies)"""
@@ -31,7 +31,10 @@ def userinfo(bot, trigger):
     try:
         lastfm_index = split_input.index('lastfm')
         lastfm_username = split_input[lastfm_index + 1]
-        bot.db.preferences.update(trigger.nick, {'lastfm': lastfm_username})
-        bot.say("Your lastfm username {} is saved.".format(lastfm_username))
+        if bot.db:
+            bot.db.preferences.update(trigger.nick, {'lastfm': lastfm_username})
+            bot.say("Your lastfm username {} is saved.".format(lastfm_username))
+        else:
+            bot.say("database has not been configured. lastfm username cannot be saved.")
     except:
         bot.say('user info not saved. Blame bob.')
