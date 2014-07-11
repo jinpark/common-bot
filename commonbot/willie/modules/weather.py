@@ -57,6 +57,9 @@ def setup(bot):
     if bot.db and not bot.db.preferences.has_columns('tz'):
         bot.db.preferences.add_columns(['tz'])
 
+    if bot.db and not bot.db.preferences.has_columns('weather_units'):
+        bot.db.preferences.add_columns(['weather_units'])
+
 
 def woeid_search(query):
     """
@@ -230,6 +233,7 @@ def weather_forecast(bot, trigger):
             latitude = bot.db.preferences.get(trigger.nick, 'latitude')
             longitude = bot.db.preferences.get(trigger.nick, 'longitude')
             location = bot.db.preferences.get(trigger.nick, 'location')
+            units = bot.db.preferences.get(trigger.nick, 'weather_units') or 'si'
         if not woeid:
             return bot.msg(trigger.sender, "I don't know where you live. " +
                            'Give me a location, like .wf London, or tell me where you live by saying .setlocation London, for example.')
@@ -240,6 +244,7 @@ def weather_forecast(bot, trigger):
             latitude = bot.db.preferences.get(trigger.nick, 'latitude')
             longitude = bot.db.preferences.get(trigger.nick, 'longitude')
             location = bot.db.preferences.get(trigger.nick, 'location')
+            units = bot.db.preferences.get(trigger.nick, 'weather_units') or 'si'
         else:
             first_result = woeid_search(location)
             if first_result is not None:
@@ -251,11 +256,12 @@ def weather_forecast(bot, trigger):
                     location = first_result.find('line1').text
                 if not location:
                     location = first_result.find('line4').text
+                units = bot.db.preferences.get(trigger.nick, 'weather_units') or 'si'
 
     if not woeid:
         return bot.reply("I don't know where that is.")
 
-    wf_text = wfbase(latitude, longitude, location)
+    wf_text = wfbase(latitude, longitude, location, units)
     bot.say(wf_text)
 
 @commands('setlocation', 'setloc')
@@ -322,7 +328,7 @@ def wfbase(latitude, longitude, location, units='si'):
         deg = degf
     else:
         deg = degc
-    return u'{location} - Today: {min_temp}-{max_temp}{deg} {summary} Tomorrow: {tom_min}-{tom_max}{deg} {tom_summary} This Week: {week_summary}'.format(location=location, min_temp=str(int(round(currentwea["temperatureMin"]))), max_temp=str(int(round(currentwea["temperatureMax"]))), deg=deg, summary=currentwea["summary"], 
+    return u'{location} - Today: {min_temp}-{max_temp}{deg} {summary} Tomorrow: {tom_min}-{tom_max}{deg} {tom_summary} This Week: {week_summary}'.format(location=location, min_temp=str(int(round(currentwea["temperatureMin"]))), max_temp=str(int(round(currentwea["temperatureMax"]))), deg=deg, summary=currentwea["summary"],
                                                                                                                                                                                                         tom_min=str(int(round(tomwea["temperatureMin"]))), tom_max=str(int(round(tomwea["temperatureMax"]))), tom_summary=tomwea["summary"],
                                                                                                                                                                                                         week_summary=weajson['daily']['summary'])
 
@@ -337,13 +343,13 @@ def old_wea(woeid):
     pressure = get_pressure(parsed)
     wind = get_wind(parsed)
     bot.say(u'%s: %s, %s, %s, %s' % (location, cover, temp, pressure, wind))
-    
+
 def c_to_f(temp):
     return temp * 1.8 + 32
 
 def kmh_to_mph(speed):
     return speed * 0.621371
-    
+
 def get_timezone(lat, lon):
     timezonedb_url = "http://ws.geonames.org/timezoneJSON?lat={}&lng={}&username={}".format(lat, lon, apikey.geonames_username)
     tz_json = requests.get(timezonedb_url).json()

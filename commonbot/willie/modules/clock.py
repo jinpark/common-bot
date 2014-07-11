@@ -41,6 +41,7 @@ def f_time(bot, trigger):
             tz = tz_or_nick
             location = tz_or_nick
         elif bot.db and tz_or_nick in bot.db.preferences:
+            # get tz from db if exists
             nick = tz_or_nick
             tz = bot.db.preferences.get(tz_or_nick, 'tz')
             if not tz:
@@ -49,6 +50,7 @@ def f_time(bot, trigger):
             location = bot.db.preferences.get(nick, 'location')
         else:
             try:
+                # incase stuff fails
                 url_location = tz_or_nick
                 osm_url = 'http://nominatim.openstreetmap.org/search?q=' + url_location + '&format=json'
                 location_json = requests.get(osm_url).json()
@@ -61,33 +63,6 @@ def f_time(bot, trigger):
             except:
                 tz = 'UTC'
                 location = 'UTC'
-    #     if tz not in pytz.all_timezones:
-    #         if bot.db and tz in bot.db.preferences:
-    #             nick = bot.db.preferences.get(tz, 'tz')
-    #             if not nick:
-    #                 bot.say("I'm sorry, I don't know %s's timezone"
-    #                         % trigger.group(2))
-    #                 return
-    #             location = bot.db.preferences.get(nick, 'location')
-    #         else:
-    #             osm_url = 'http://nominatim.openstreetmap.org/search?q=' + tz + '&format=json'
-    #             location_json = requests.get(osm_url).json()
-    #             latitude = location_json[0]['lat']
-    #             longitude = location_json[0]['lon']
-    #             location = location_json[0]['display_name']
-    #             geonames_url = 'http://api.geonames.org/timezoneJSON?lat=' + latitude + '&lng=' + longitude + '&username=' + apikey.geonames_username
-    #             timezone_json = requests.get(geonames_url).json()
-    #             tz = timezone_json['timezoneId']
-    # #We don't have a timzeone. Is there one set? If not, just use UTC
-    # elif bot.db:
-    #     if trigger.nick in bot.db.preferences:
-    #         tz = bot.db.preferences.get(trigger.nick, 'tz')
-    #     if not tz and trigger.sender in bot.db.preferences:
-    #         tz = bot.db.preferences.get(trigger.sender, 'tz')
-    #     if not tz:
-    #         tz = 'UTC'
-    # else:
-    #     tz = 'UTC'
     tzi = pytz.timezone(tz)
     now = datetime.datetime.now(tzi)
 
